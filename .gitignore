@@ -1,5 +1,6 @@
-/client/.idea/
-/client/build/
-/client/node_modules/
+.idea
+client/.idea
+client/build
+client/node_modules
 
-/server/node_modules/
+server/node_modules
