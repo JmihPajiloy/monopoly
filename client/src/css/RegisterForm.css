@@ -1,0 +1,19 @@
+.RegisterForm {
+    width: 500px;
+    height: 500px;
+    display: flex;
+    margin: auto;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+input {
+    display: block;
+    height: 20px;
+    width: 200px;
+}
+
+button {
+    display: block;
+}
