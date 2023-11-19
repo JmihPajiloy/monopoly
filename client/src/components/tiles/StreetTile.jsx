@@ -2,6 +2,7 @@ import React, { forwardRef } from "react";
 import { getRowByID, isVertical } from "../../utils";
 import styled from "styled-components";
 import { socket } from "../../socket";
+import { Cost } from "../../styles";
 
 const StreetWrapper = styled.div`
   display: grid;
@@ -50,33 +51,7 @@ const Title = styled.div`
   
   
 `;
-export const Cost = styled.div`
-  text-align: center;
-  transition: 0.3s;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-shrink: 0;
-  color: #202020;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 800;
-  line-height: normal;
-  width: ${props => isVertical(props.streetid) ? 20 : 70}px;
-  height: ${props => isVertical(props.streetid) ? 70 : 20}px;
-  
-  ${props => {
-    switch (getRowByID(props.streetid)) {
-      case "left":
-        return "transform: rotate(90deg);"
-      case "right":
-        return "transform: rotate(-90deg);"
-      default:
-        return ""
-    }
-  }}
-`;
+
 
 const StreetTile = forwardRef(({ color, ownerColor, shownRent, children, id }, ref) => {
   const row = getRowByID(id);

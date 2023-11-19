@@ -11,12 +11,9 @@ const style = {
   width: "1400px",
   height: "930px",
   display: "grid",
-  // flexDirection: "row",
-  // justifyContent: "center",
   gridTemplateColumns: "450px 930px",
   gridTemplateRows: "300px",
   gridGap: "30px"
-  // transition: "0.3s"
 };
 
 const BoardWrapper = styled.div`
@@ -35,17 +32,14 @@ const BoardWrapper = styled.div`
 
 
 function App() {
-  const [isConnected, setIsConnected] = useState(socket.connected);
 
   const [isRegistered, setIsRegistered] = useState(false);
   useEffect(() => {
     const onConnect = () => {
       console.log("connected");
-      setIsConnected(true);
     };
     const onDisconnect = (reason) => {
       console.log(`disconnected because of ${reason}`);
-      setIsConnected(false);
     };
 
     socket.on("connect", onConnect);

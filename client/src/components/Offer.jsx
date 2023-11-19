@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { socket } from "../socket";
-import "../style.css";
 import styled from "styled-components";
 
 const OfferWrapper = styled.div`
@@ -69,7 +68,7 @@ const Offer = () => {
       setMsg(msg);
       buttonEvents = [...events];
       setButtons(options.map((_, i) => (
-        <Button className="one-button button-msg-text"
+        <Button
                 ref={btn => btnRefs.current[i] = btn}
                 key={i}
                 index={i}

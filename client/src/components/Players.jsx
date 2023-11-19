@@ -48,6 +48,7 @@ const Balance = styled.div`
   width: 300px;
   height: 55px;
   justify-content: right;
+  transition: 0.3s;
 `;
 
 const PlayerCard = ({ name, balance, bgcolor }) => {

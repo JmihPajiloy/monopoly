@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { socket } from "../socket";
-import "../style.css";
 import styled from "styled-components";
 
 const MessageWrapper = styled.div`
@@ -78,7 +77,7 @@ export default function Chat() {
     };
     const onError = err => {
       setChat(chat.concat(
-        (<Message key={index} textColor="red" text={err} />)
+        (<Message key={index} text={err} />)
       ));
       setIndex(index + 1);
     };
@@ -90,11 +89,6 @@ export default function Chat() {
     };
   }, [chat, socket]);
 
-  // return (<div>
-  //   <ul>
-  //     {chat}
-  //   </ul>
-  // </div>);
   return (<ChatWrapper>
     {chat}
     <div ref={dummy}></div>

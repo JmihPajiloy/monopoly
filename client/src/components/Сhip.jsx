@@ -4,7 +4,7 @@ import { getColor } from "../utils";
 
 export const Chip = ({ color, x, y }) => {
   const fill = getColor(color).normal;
-  // const stroke = getColor(color).normal;
+
   return (
     <svg style={{
       transition: "1s",

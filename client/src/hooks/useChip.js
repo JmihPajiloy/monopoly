@@ -3,8 +3,6 @@ import { socket } from "../socket";
 import useWindowSize from "./useWindowSize";
 
 export const useChipProps = (tileRefs) => {
-
-
     const [chipProps, setChipProps] = useState([]);
     const winSize = useWindowSize();
 

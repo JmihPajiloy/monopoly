@@ -1,5 +1,4 @@
 import React, { useRef } from "react";
-import "../style.css";
 import { useTileColors } from "../hooks/useTileColors";
 import { useChipProps } from "../hooks/useChip";
 import { useRents } from "../hooks/useRent";

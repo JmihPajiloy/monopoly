@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
 
-// Debounce function
 function debounce(func, wait, immediate) {
   var timeout
   return function () {

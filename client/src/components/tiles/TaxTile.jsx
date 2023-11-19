@@ -1,12 +1,6 @@
 import React, { forwardRef } from "react";
-import { SVGWrapper, Wrapper } from "./ShoppingMallTile";
-import { Cost } from "./StreetTile";
 import { isVertical } from "../../utils";
-
-const style = {
-  backgroundColor: "#F5F5F5",
-  borderRadius: "5px"
-};
+import { Cost, SVGWrapper, Wrapper } from "../../styles";
 
 const TaxTile = forwardRef(({ id, amount }, ref) => {
   return (
