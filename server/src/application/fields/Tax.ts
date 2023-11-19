@@ -1,6 +1,6 @@
 import { BaseField, Position } from "./BaseField";
 import { Player } from "../Player";
-import { SocketEvents } from "../../socketEvents";
+import { SocketEvents } from "../../socket-events";
 import { NotEnoughMoneyError } from "../errors";
 
 export interface TaxConstructorObject {

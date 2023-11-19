@@ -21,7 +21,7 @@ export class Utility extends PropertyField {
     if (this.owner.hasMonopoly(this.group)) {
       return `x${this.rentList[1]}`;
     }
-    return `x${this.rentList[0]}`;
+    return `${this.rentList[0]}x`;
   }
 
   getRent(player: Player): number {

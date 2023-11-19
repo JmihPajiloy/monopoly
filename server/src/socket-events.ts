@@ -1,8 +1,6 @@
-import { Server } from "socket.io";
-import http from "http";
-import express from "express";
+import { Socket } from "socket.io";
+import { Position } from "./application/fields/BaseField";
 
-import cors from "cors";
 
 /** Все ивенты, которые может обрабатывать сервер
  * @constant CONNECT - подключение к серверу
@@ -14,6 +12,7 @@ export enum SocketEvents {
   CONNECT = "connection",
   DISCONNECT = "disconnect",
   DO_CHANCE_ACTION = "do-chance-action",
+  END_STEP = "end-step",
   ERROR = "error",
   GAME_STATE = "game-state",
   MESSAGE = "message",
@@ -27,10 +26,9 @@ export enum SocketEvents {
   ROLL_DICE_DEFAULT = "roll-dice:default",
   ROLL_DICE_IN_JAIL = "roll-dice:in-jail",
   SEND_ON_AUCTION = "send-on-auction",
-  SUGGEST = "suggest"
+  SUGGEST = "suggest",
+  SELL = "sell"
 }
-
-
 
 
 /** На фронтенде создается окно с кнопками из `options`. При нажатии на кнопку выполняется соответствующий ивент из `events` */
@@ -45,11 +43,37 @@ export interface Message {
   time: string;
 }
 
-export const app: express.Express = express();
-app.use(cors());
-export const server: http.Server = http.createServer(app);
-export const io: Server = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000"
-  }
-});
+export interface ServerToClientEvents {
+  "error": (errorMessage: string) => void,
+  // "game-state": { ... },
+  "message": (message: Message) => void,
+  "ok": () => void,
+  "suggest": (offer: Offer) => void,
+}
+
+export interface ClientToServerEvents {
+  "buy-field": () => void;
+  "connection": (socket: Socket) => void,
+  "disconnect": (reason: string) => void,
+  "do-chance-action": () => void,
+  "end-step": () => void,
+  "next-step": () => void,
+  "pay-fine": () => void,
+  "pay-rent": () => void,
+  "pay-tax": () => void,
+  "ready": () => void,
+  "register": ({ nickname, room }: { nickname: string, room: string }) => void,
+  "roll-dice:default": () => void,
+  "roll-dice:in-jail": () => void,
+  "send-on-auction": () => void,
+  "sell": (fieldID: Position) => void
+}
+
+export interface InterServerEvents {
+  ping: () => void;
+}
+
+export interface SocketData {
+  playerName: string;
+}
+

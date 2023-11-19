@@ -3,6 +3,8 @@ import { Player } from "./Player";
 import { GameplayError } from "./errors";
 import { PropertyField } from "./fields/porperty-fields/PropertyField";
 
+// TODO: Поддержку аукционов добавим в будущем
+
 class Auction {
   private roulette: Player[];
   private readonly step: number = 10;

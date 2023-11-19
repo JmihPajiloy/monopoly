@@ -1,7 +1,7 @@
-import { Player } from "../../Player";
 import { PropertyField } from "./PropertyField";
 import { GameplayError } from "../../errors";
 import { Position } from "../BaseField";
+import logger from "../../../logger";
 
 export enum FieldGroups {
   BROWN,
@@ -14,7 +14,7 @@ export enum FieldGroups {
   DARK_BLUE,
   UTILITY,
   SHOPPING_MALL
-};
+}
 
 export interface StreetConstructorObject {
   name: string,
@@ -42,7 +42,7 @@ export class Street extends PropertyField {
 
   get shownRent(): string {
     if (!this.owner) return this.buyCost.toString();
-    return this.getRent().toString();
+    return this.getRent().toString() + "₽";
   }
 
   buildHouse(): void | never {

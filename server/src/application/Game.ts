@@ -7,18 +7,32 @@ import { ShoppingMall, ShoppingMallConstructorObject } from "./fields/porperty-f
 import { Utility, UtilityConstructorObject } from "./fields/porperty-fields/Utility";
 import { ToJail, ToJailConstructorObject } from "./fields/ToJail";
 import { Socket } from "socket.io";
-import { fields } from "./monopoly";
-import { SocketEvents } from "../socketEvents";
-import { BaseField } from "./fields/BaseField";
+import { fields } from "./fields";
+import { SocketEvents } from "../socket-events";
+import { BaseField, Position } from "./fields/BaseField";
 import { GameplayError } from "./errors";
 
-export type AnyField = (EmptyField | Street | Chance | Tax | ShoppingMall | Utility | ToJail)
-export type Money = number;
+export type PlayerColor = "red" | "green" | "blue" | "yellow"
+
+type GameJSON = {
+  room: string,
+  players: {
+    name: string,
+    color: PlayerColor
+    balance: number,
+    position: Position,
+    owns: {
+      name: string,
+      pos: Position,
+      rent: string
+    }[]
+  }[]
+}
 
 /** Класс для игры*/
 export class Game {
   private players: Player[];
-  static readonly fields: BaseField[] = [
+  readonly fields: BaseField[] = [
     new EmptyField(<EmptyFieldConstructorObject>fields[0]),
     new Street(<StreetConstructorObject>fields[1]),
     new Chance(fields[2]),
@@ -67,6 +81,7 @@ export class Game {
   private static instances: Map<string, Game> = new Map();
   public loggedIn: number;
   public ready: number;
+  private colors: PlayerColor[];
 
 
   get playerList() {
@@ -78,12 +93,13 @@ export class Game {
     this.players = [];
     this.loggedIn = 0;
     this.ready = 0;
+    this.colors = ["red" , "green" , "blue", "yellow"]
   }
 
-  toJSON() {
+  toJSON(): GameJSON {
     return {
       room: this.room,
-      players: this.players.map(p => p.toJSON())
+      players: [...this.players.map(p => p.toJSON())]
     };
   }
 
@@ -106,7 +122,9 @@ export class Game {
   }
 
   createPlayer(socket: Socket, name: string): Player {
-    const player: Player = new Player(socket, this.room, name);
+    const color = <PlayerColor>this.colors.pop()
+    const player: Player = new Player(socket, this.room, name, color);
+    socket.data.playerName = name;
     Game.playersBySockets.set(socket.id, player);
     this.players.push(player);
     return player;
@@ -138,6 +156,10 @@ export class Game {
       options: ["Бросить кубики"],
       msg: "Твой ход первый - бросай кубики!"
     });
+  }
+
+  public deleteSession() {
+    Game.instances.delete(this.room)
   }
 
 // kickPlayer(player: Player): void {

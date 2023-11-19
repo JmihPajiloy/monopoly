@@ -1,7 +1,7 @@
 import { Player } from "../Player";
 
 import { BaseField, Position } from "./BaseField";
-import { SocketEvents } from "../../socketEvents";
+import { SocketEvents } from "../../socket-events";
 
 export interface ToJailConstructorObject {
   name: string,

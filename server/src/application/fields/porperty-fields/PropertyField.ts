@@ -1,9 +1,9 @@
 import { BaseField, Position } from "../BaseField";
 import { Player } from "../../Player";
 import { FieldGroups } from "./Street";
-import { SocketEvents } from "../../../socketEvents";
+import { SocketEvents } from "../../../socket-events";
 import { GameplayError, NotEnoughMoneyError } from "../../errors";
-import { isUndefined } from "../../../utils";
+
 
 export abstract class PropertyField extends BaseField {
 
@@ -25,7 +25,7 @@ export abstract class PropertyField extends BaseField {
   }
 
   public hasOwner(): boolean {
-    return isUndefined(this._owner)
+    return !!this._owner
   }
 
   public get owner(): Player {
@@ -33,7 +33,7 @@ export abstract class PropertyField extends BaseField {
     return this._owner;
   }
 
-  public set owner(value: Player) {
+  public set owner(value: Player | undefined) {
     this._owner = value;
   }
 
@@ -66,21 +66,21 @@ export abstract class PropertyField extends BaseField {
 
   private onRivals(player: Player): void {
     if ((this._owner !== player) && this._owner) {
-      player.sendMessage(`Поле ${this.name} принадлежит ${this.owner.name}, и ${player.name} обязан заплатить ренту ${this.getRent(player)}`);
+      player.sendMessage(`Поле ${this.name} принадлежит ${this.owner.name}, и ${player.name} обязан заплатить ренту ${this.getRent(player)}₽`);
       player.sendOffer({
         events: [SocketEvents.PAY_RENT],
-        options: [`Заплатить ${this.getRent(player)}`],
-        msg: `Вы обязаны заплатить ${this.owner.name} ренту ${this.getRent(player)}`
+        options: [`Заплатить ${this.getRent(player)}₽`],
+        msg: `Вы обязаны заплатить ${this.owner.name} ренту ${this.getRent(player)}₽`
       });
     }
   }
 
   private onUnowned(player: Player): void {
     if (!this._owner) {
-      player.sendMessage(`Поле никем не занято и ${player.name} может купить его за ${this.buyCost}`);
+      player.sendMessage(`Поле никем не занято и ${player.name} может купить его за ${this.buyCost}₽`);
       player.sendOffer({
-        events: [SocketEvents.BUY_FIELD, SocketEvents.NEXT_STEP],
-        options: [`Купить за ${this.buyCost}`, "Не покупать"],
+        events: [SocketEvents.BUY_FIELD, SocketEvents.END_STEP],
+        options: [`Купить за ${this.buyCost}₽`, "Не покупать"],
         msg: `Поле никем не занято. Хочешь купить его?`
       });
     }

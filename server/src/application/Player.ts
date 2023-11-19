@@ -1,7 +1,7 @@
 import logger from "../logger";
 import { Socket } from "socket.io";
-import { Message, Offer, SocketEvents } from "../socketEvents";
-import { Game } from "./Game";
+import { Message, Offer, SocketEvents } from "../socket-events";
+import { Game, PlayerColor } from "./Game";
 import { FieldGroups } from "./fields/porperty-fields/Street";
 import { ChanceCard } from "./fields/Chance";
 import { GameplayError, NotEnoughMoneyError } from "./errors";
@@ -33,8 +33,9 @@ export class Dice {
 
 
 export class Player {
+  color: PlayerColor;
   socket: Socket;
-  position: number;
+  position: Position;
   name: string;
   balance: number;
   inJail: boolean;
@@ -63,7 +64,7 @@ export class Player {
     this._lastChanceCard = val;
   }
 
-  constructor(socket: Socket, room: string, name: string) {
+  constructor(socket: Socket, room: string, name: string, color: PlayerColor) {
     this.socket = socket;
     this.room = room;
     this.name = name;
@@ -74,11 +75,13 @@ export class Player {
     this.spentInJail = 0;
     this.thrownDoubles = 0;
     this.owns = [];
+    this.color = color;
   }
 
   public toJSON() {
     return {
       name: this.name,
+      color: this.color,
       balance: this.balance,
       position: this.position,
       owns: this.owns.map(prop => prop.toJSON())
@@ -86,7 +89,8 @@ export class Player {
   }
 
   public get currentField() {
-    return Game.fields[this.position];
+    const game = Game.getInstance(this.room);
+    return game.fields[this.position];
   }
 
   /** Проверяет есть ли у игрока монополия на собственность группы `group`*/
@@ -106,9 +110,11 @@ export class Player {
     return this.owns.filter(value => (value.group === group)).length === streetsByGroups.get(group);
   }
 
-  /** Не юзать в `onStep` поля `To Jail` */
   public goToJail(): void {
-    Game.fields[10].onStep(this);
+    const game = Game.getInstance(this.room);
+
+    game.sendState();
+    game.fields[10].onStep(this);
   }
 
   sendOk(): void {
@@ -116,15 +122,21 @@ export class Player {
   }
 
   sendError(errorMessage: string): void {
+    logger.warning(errorMessage);
     this.socket.emit(SocketEvents.ERROR, errorMessage);
   }
 
   public endStep(): void {
     if (!this._lastDice) throw new GameplayError("Can not find players last dice!");
     if (this.lastDice.isDouble() && !this.inJail) {
-      this.rollDice();
-      this.goOn(this.lastDice.value);
-      this.currentField.onStep(this);
+      this.sendOffer({
+        options: ["Бросить кубики!"],
+        events: [SocketEvents.ROLL_DICE_DEFAULT],
+        msg: "У тебя дубль! Кидай кубики еще раз"
+      });
+      // this.rollDice();
+      // this.goOn(this.lastDice.value);
+      // this.currentField.onStep(this);
     } else if (!this.lastDice.isDouble() || this.inJail) {
       this.sendOffer({
         options: ["Завершить ход!"],
@@ -136,29 +148,47 @@ export class Player {
 
   public buyField(field: BaseField): void | never {
     if (!(field instanceof PropertyField)) throw new TypeError(`Field "${field.name}" is not a property!`);
-    if (field.owner) throw new GameplayError(`Field "${field.name}" already has an owner!`);
-    if (this.balance - field.buyCost < 0) throw new NotEnoughMoneyError(`${this.name} can't pay fine because he is too poor!`);
+    if (field.hasOwner()) throw new GameplayError(`Field "${field.name}" already has an owner!`);
+    if (this.balance - field.buyCost < 0) throw new NotEnoughMoneyError(`${this.name} can't buy field because he is too poor!`);
     this.balance -= field.buyCost;
     field.owner = this;
     this.owns.push(field);
+  }
+
+  public sellField(field: BaseField): void {
+    if (!(field instanceof PropertyField)) throw new TypeError(`Field "${field.name}" is not a property!`);
+    if (field.owner != this) throw new GameplayError(`Field "${field.name}" already has another owner!`);
+    this.balance += field.sellCost;
+    field.owner = undefined;
+    const index = this.owns.indexOf(field);
+    if (index !== -1) {
+      this.owns.splice(index, 1);
+    } else {
+      throw new GameplayError(`Field "${field.name}" doesn't have an owner!`);
+    }
+
 
   }
 
   public payFine(): void | never {
     if (this.balance - 50 < 0) throw new NotEnoughMoneyError(`${this.name} can't pay fine because he is too poor!`);
     this.balance -= 50;
-    this.spentInJail = 0;
     this.inJail = false;
+    this.spentInJail = 0;
   }
 
   public rollDice(): Dice {
     this.lastDice = Dice.roll();
-    if (this.lastDice.isDouble() && this.thrownDoubles === 3) {
-      this.goToJail();
-      this.thrownDoubles = 0;
-    } else if (this.lastDice.isDouble() && this.thrownDoubles <= 2) {
+
+    if (this.lastDice.isDouble()) {
       this.thrownDoubles += 1;
-    } else if (!this.lastDice.isDouble()) {
+    } else {
+      this.thrownDoubles = 0;
+    }
+
+    if (this.thrownDoubles >= 3) {
+      this.goToJail();
+      this.sendMessage(`${this.name} выбрасывает 3 дуля подряд и отправляется в тюрьму!`);
       this.thrownDoubles = 0;
     }
     return this.lastDice;
@@ -168,7 +198,7 @@ export class Player {
    * @param {string} msg - сообщение
    */
   public sendMessage(msg: string): void {
-    const message: Message = { msg: `(${this.balance}р) ${msg}`, time: new Date().toLocaleTimeString() };
+    const message: Message = { msg: msg, time: (new Date()).toLocaleTimeString() };
     logger.chat(msg);
     this.socket.to(this.room).emit(SocketEvents.MESSAGE, message);
     this.socket.emit(SocketEvents.MESSAGE, message);
@@ -185,7 +215,7 @@ export class Player {
    * @return {boolean} - прошел ли игрок поле Старт*/
   public goOn(steps: number): boolean {
     const prevPos: number = this.position;
-    this.position = (this.position + steps) % 40;
+    this.position = <Position>((this.position + steps) % 40);
     return (this.position < prevPos);
   }
 

@@ -21,7 +21,7 @@ export class ShoppingMall extends PropertyField {
   }
 
   get shownRent(): string {
-    return this.getRent().toString();
+    return this.getRent().toString() + "₽";
   }
 
   getRent(): number | never {
